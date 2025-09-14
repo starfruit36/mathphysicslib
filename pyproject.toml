@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "mathPhysicsLib"
 version = "0.1.0"
 description = """A math and physics helper library for people interested in Calculus, Differential Equations and 
-Classical Mechanics (for now). This library will be updated as I learn more from my courses."""
+Classical Mechanics (for now). This library will be updated as I learn more from my courses. This is made because I want some actual coding experience."""
 
 authors = [
   { name="Le Minh Ngoc", email="leminhngoc3669420@gmail.com" }
@@ -19,4 +19,4 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/starfruit36/MathPhysicsLibrary"
+Homepage = "https://github.com/starfruit36/mathphysicslib"
