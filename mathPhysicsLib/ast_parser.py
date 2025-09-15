@@ -20,8 +20,8 @@ def convert(node):
 
     if isinstance(node, ast.BinOp):
         if isinstance(node.op, ast.Add):
-            return Add([convert(node.left), convert(node.right)])
+            return Add(convert(node.left), convert(node.right))
         if isinstance(node.op, ast.Mult):
-            return Mul([convert(node.left), convert(node.right)])
+            return Mul(convert(node.left), convert(node.right))
         if isinstance(node.op, ast.Pow):
             return Pow(convert(node.left), convert(node.right))
