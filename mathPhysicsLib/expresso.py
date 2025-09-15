@@ -6,11 +6,24 @@ class Constant(Expr):
         self.value = value
     def __repr__(self):
         return str(self.value)
+    
+    def key(self):
+        v = self.value
+        if v == 0:
+            return ("Const", 0)
+        if isinstance(v, float):
+            if v.is_integer():
+                return ("Const", int(v))
+            return ("Const", v)
+        if isinstance(v, int):
+            return ("Const", v)
+        return ("Const", v)
+    
     def __eq__(self, other):
         # Equality works only if other is also Constant and has same value
-        if isinstance(other, Constant):
-            return self.value == other.value
-        return False
+        return isinstance(other, Constant) and self.key() == other.key()
+    def __hash__(self):
+        return hash(self.key())
     
 def constant_conversion(const):
     # Helper: wrap int/float into Constant (excludes bools)
@@ -26,11 +39,14 @@ class Var(Expr):
         self.name = name
     def __repr__(self):
         return self.name
+    def key(self):
+        n = self.name
+        return ("Var", n)
     def __eq__(self, other):
         # Equality works only if other is Var with same name
-        if isinstance(other, Var):
-            return self.name == other.name
-        return False
+        return isinstance(other, Var) and self.key() == other.key()
+    def __hash__(self):
+        return hash(self.key())
 
 def variadic_flatten(expr, func_type):
     """
@@ -73,17 +89,33 @@ class Add(Expr):
         if total != 0:        
             self.terms.append(Constant(total)) # keep final constant if nonzero
         if not self.terms:
-            self.terms.append(Constant(0)) # ensure empty sum becomes 0
+            self.terms = [Constant(0)] # ensure empty sum becomes 0
                 
     def __repr__(self):
         # Pretty-print as "(a + b + c)"
         return "(" + " + ".join(map(str, self.terms)) + ")"
-    
+
+    def key(self):
+        child_keys = [t.key() for t in self.terms]
+        not_const = []
+        consts = []
+        for i, j in zip(self.terms, child_keys):
+            if isinstance(i, Constant):
+                consts.append(i.value)
+            else:
+                not_const.append(j)
+        if consts:
+            const_val = consts[0]
+        else: 
+            const_val = 0
+        not_const_sorted = tuple(sorted(not_const))
+        return ("Add", not_const_sorted, const_val)
+
     def __eq__(self, other):
-        # Compare ignoring term order by sorting string representations (will make proper key later)
-        if not isinstance(other, Add):
-            return False
-        return sorted(self.terms, key=str) == sorted(other.terms, key=str)
+        return isinstance(other, Add) and self.key() == other.key()
+    
+    def __hash__(self):
+        return hash(self.key())
 
 class Mul(Expr):
     def __init__(self, *factors):
@@ -110,24 +142,40 @@ class Mul(Expr):
         if product != 1:
             self.factors.append(Constant(product))  # keep final constant if not 1
         if not self.factors:
-            self.factors.append(Constant(1))  # ensure empty product becomes 1
-            
+            self.factors = [Constant(1)]  # ensure empty product becomes 1
     def __repr__(self):
         return "(" + " * ".join(map(str, self.factors)) + ")"
+    
+    def key(self):
+        child_keys = [t.key() for t in self.factors]
+        not_const = []
+        consts = []
+        for i, j in zip(self.factors, child_keys):
+            if isinstance(i, Constant):
+                consts.append(i.value)
+            else:
+                not_const.append(j)
+        if consts:
+            const_val = consts[0]
+        else: 
+            const_val = 1
+        not_const_sorted = tuple(sorted(not_const))
+        return ("Mul", not_const_sorted, const_val)
 
     def __eq__(self, other):
         # Compare ignoring term order by sorting string representations (will make proper key later)
-        if not isinstance(other, Mul):
-            return False
-        return sorted(self.factors, key=str) == sorted(other.factors, key=str)
+        return isinstance(other, Mul) and self.key() == other.key()
+    
+    def __hash__(self):
+        return hash(self.key())
 
 # Mapping of variadic classes to their attribute fields
 variadic_field = {Add:"terms", Mul:"factors"}
 
 class Pow(Expr):
     def __init__(self,base, exponent):
-        self.base = base
-        self.exponent = exponent
+        self.base = constant_conversion(base)
+        self.exponent = constant_conversion(exponent)
 
     @staticmethod
     def pow_fold(base, exponent):
@@ -184,9 +232,10 @@ class Pow(Expr):
                      
     def __repr__(self):
         return f"({self.base} ** {self.exponent})"
-
+    def key(self):
+        return ("Pow", self.base.key(), self.exponent.key())
     def __eq__(self, other):
         # Compare base & exponent as-is
-        if not isinstance(other, Pow):
-            return False
-        return self.base == other.base and self.exponent == other.exponent
+        return isinstance(other, Pow) and self.key() == other.key()
+    def __hash__(self):
+        return hash(self.key())

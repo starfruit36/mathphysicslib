@@ -1,6 +1,6 @@
 import ast
 
-from .expresso import Constant,Mul, Add, Var, Pow
+from mathphysicslib.expresso import Constant,Mul, Add, Var, Pow
 
 def parse_to_func(func: str):
     if not isinstance(func, str):

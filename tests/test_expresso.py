@@ -48,11 +48,11 @@ def test_add_folds_constants():
 def test_add_sum_zero():
     expr = Add(Constant(2), Constant(-2))
     # Should normalize to just Constant(0)
-    assert len(expr.terms) == 1 and isinstance(expr.terms[0], Constant) and expr.terms[0].value == 0
+    assert isinstance(expr.terms, Constant) and expr.terms.value == 0
 
 def test_add_empty_constructor():
     expr = Add()
-    assert len(expr.terms) == 1 and isinstance(expr.terms[0], Constant) and expr.terms[0].value == 0
+    assert isinstance(expr.terms, Constant) and expr.terms.value == 0
 
 def test_add_folds_inner_constants():
     x, y = Var("x"), Var("y")
@@ -91,8 +91,7 @@ def test_mul_zero():
 
 def test_mul_no_factors():
     expr = Mul()  # empty product -> 1
-    assert len(expr.factors) == 1
-    assert isinstance(expr.factors[0], Constant) and expr.factors[0].value == 1
+    assert isinstance(expr.factors, Constant) and expr.factors.value == 1
 
 def test_mul_order_insensitive():
     x, y = Var("x"), Var("y")
